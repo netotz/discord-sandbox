@@ -4,19 +4,27 @@ MyFirstBot#9854
 
 import os
 
-import discord
+from discord.ext import commands
 import dotenv
 
-class MyClient(discord.Client):
+class MyFirstBot(commands.Bot):
     async def on_ready(self):
-        print(f'Logged as {self.user}')
+        print(f'Logged in as {self.user}')
 
-    async def on_message(self, message):
-        if message.content.startswith('hey!'):
-            await message.channel.send(f'Hey @{message.author}!')
+class Greeting(commands.Cog):
+    @commands.command()
+    async def hey(self, ctx):
+        '''
+        Returns the greeting :)
+        '''
+        await ctx.send(f'Hey {ctx.message.author}!')
 
-# bot token is on a .env file, not commited to git
+# bot token is in a .env file, not commited to git
 dotenv.load_dotenv()
 TOKEN = os.getenv('BOT_TOKEN')
 
-MyClient().run(TOKEN)
+# bot will respond when mentioned rather to a command prefix
+bot = MyFirstBot(commands.when_mentioned)
+# register cog (commands)
+bot.add_cog(Greeting(bot))
+bot.run(TOKEN)
