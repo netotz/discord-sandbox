@@ -1,2 +1,3 @@
 # discord-sandbox
-Trying Discord API
+
+Self tutorial of Discord API
