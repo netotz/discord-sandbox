@@ -4,6 +4,9 @@ MyFirstBot#9854
 
 import os
 import asyncio
+import random
+from dataclasses import dataclass
+from typing import Tuple
 
 import discord
 from discord.ext import commands
@@ -16,9 +19,6 @@ GUILD_NAME = os.getenv('GUILD_NAME')
 CHANNEL_NAME = os.getenv('CHANNEL_NAME')
 
 class MyFirstBot(commands.Bot):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     async def on_ready(self):
         print(f'Logged in as {self.user}')
 
@@ -35,21 +35,49 @@ class MyFirstBot(commands.Bot):
         while not self.is_closed():
             await asyncio.sleep(step)
 
-            counter = step / 60
+            counter += step / 60
             await channel.send(f'{counter} m')
 
-class Greeting(commands.Cog):
+@dataclass
+class GreetingsCog(commands.Cog):
+    bot: commands.Bot
+    greetings: Tuple[str, ...] = ('Hey', 'Hello', 'Hola', 'Saludos', 'Saluton')
+
     @commands.command()
     async def hey(self, ctx):
         '''
-        Returns the greeting :)
+        Returns a greeting :)
         '''
-        await ctx.send(f'Hey {ctx.message.author}!')
+        greeting = random.choice(self.greetings)
+        await ctx.send(f'{greeting} {ctx.message.author.name}!')
+
+class GamesCog(commands.Cog):
+    @commands.command()
+    async def coin(self, ctx, userface: str):
+        '''
+        Play heads or tails.
+        '''
+        # heads is True, tails is False
+        tossed = random.random() <= 0.5
+        did_user_win = tossed == (userface == 'heads')
+
+        phrase = 'you won...' if did_user_win else 'YOU LOST!!!'
+        face = 'heads' if tossed else 'tails'
+        # save sent message
+        message = await ctx.send(f"It's {face}, {phrase}")
+
+        emoji = '\N{WHITE HEAVY CHECK MARK}' if did_user_win else '\N{CROSS MARK}'
+        try:
+            # react with emoji to sent message
+            await message.add_reaction(emoji)
+        except Exception as exception:
+            print(exception)
 
 # bot will respond when mentioned rather to a command prefix
 bot = MyFirstBot(commands.when_mentioned)
-# register cog (commands)
-bot.add_cog(Greeting(bot))
+# register cogs (commands)
+bot.add_cog(GreetingsCog(bot))
+bot.add_cog(GamesCog(bot))
 
 # run method in background
 # bot.loop.create_task(bot.count_in_background())
