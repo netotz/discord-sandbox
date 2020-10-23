@@ -18,26 +18,6 @@ TOKEN = os.getenv('BOT_TOKEN')
 GUILD_NAME = os.getenv('GUILD_NAME')
 CHANNEL_NAME = os.getenv('CHANNEL_NAME')
 
-class MyFirstBot(commands.Bot):
-    async def on_ready(self):
-        print(f'Logged in as {self.user}')
-
-    async def count_in_background(self, step=60):
-        '''
-        Counts minutes in background.
-        '''
-        await self.wait_until_ready()
-
-        guild = discord.utils.get(self.guilds, name=GUILD_NAME)
-        channel = discord.utils.get(guild.text_channels, name=CHANNEL_NAME)
-
-        counter = 0
-        while not self.is_closed():
-            await asyncio.sleep(step)
-
-            counter += step / 60
-            await channel.send(f'{counter} m')
-
 @dataclass
 class GreetingsCog(commands.Cog):
     bot: commands.Bot
@@ -73,11 +53,34 @@ class GamesCog(commands.Cog):
         except Exception as exception:
             print(exception)
 
-# bot will respond when mentioned rather to a command prefix
-bot = MyFirstBot(commands.when_mentioned)
-# register cogs (commands)
-bot.add_cog(GreetingsCog(bot))
-bot.add_cog(GamesCog(bot))
+class MyFirstBot(commands.Bot):
+    def __init__(self, *args, **kwargs):
+        # bot will respond when mentioned rather to a command prefix
+        super().__init__(commands.when_mentioned, *args, **kwargs)
+        # register cogs (commands)
+        self.add_cog(GreetingsCog(self))
+        self.add_cog(GamesCog(self))
+
+    async def on_ready(self):
+        print(f'Logged in as {self.user}')
+
+    async def count_in_background(self, step=60):
+        '''
+        Counts minutes in background.
+        '''
+        await self.wait_until_ready()
+
+        guild = discord.utils.get(self.guilds, name=GUILD_NAME)
+        channel = discord.utils.get(guild.text_channels, name=CHANNEL_NAME)
+
+        counter = 0
+        while not self.is_closed():
+            await asyncio.sleep(step)
+
+            counter += step / 60
+            await channel.send(f'{counter} m')
+
+bot = MyFirstBot()
 
 # run method in background
 # bot.loop.create_task(bot.count_in_background())
