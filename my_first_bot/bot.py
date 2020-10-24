@@ -16,8 +16,7 @@ import dotenv
 # load environment variables from .env (not commited to git)
 dotenv.load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-GUILD_NAME = os.getenv('GUILD_NAME')
-CHANNEL_NAME = os.getenv('CHANNEL_NAME')
+CHANNELS_NAMES = os.getenv('CHANNELS_NAMES').split()
 
 @dataclass
 class OthersGog(commands.Cog):
@@ -54,7 +53,7 @@ class OthersGog(commands.Cog):
 
     @commands.command(
         name='heart-me',
-        help=f'The bot reacts your message with {EMOJIS[":heart:"]}')
+        help=f'The bot reacts to your message with {EMOJIS[":heart:"]}')
     # only works if user has 'pro crack' role.
     @commands.has_role('pro crack')
     async def heart_me(self, ctx):
@@ -113,18 +112,22 @@ class MyFirstBot(commands.Bot):
             pensive = EMOJIS[':pensive:']
             await ctx.send(f"Sorry {ctx.message.author.mention}, you don't have permission to use this command {pensive}")
 
-    async def count_in_background(self, step=60):
+    async def count_in_background(self, seconds=60):
         '''
         Counts minutes in background.
         '''
         await self.wait_until_ready()
 
-        guild = discord.utils.get(self.guilds, name=GUILD_NAME)
-        channel = discord.utils.get(guild.text_channels, name=CHANNEL_NAME)
+        # retrieve specified channels from .env
+        channels = [
+            discord.utils.get(guild.text_channels, name=channel_name)
+            for guild, channel_name in zip(self.guilds, CHANNELS_NAMES)
+        ]
 
         counter = 0
         while not self.is_closed():
-            await asyncio.sleep(step)
+            for channel in channels:
+                await channel.send(f'{counter} minutes')
 
-            counter += step / 60
-            await channel.send(f'{counter} minutes')
+            await asyncio.sleep(seconds)
+            counter += seconds / 60
