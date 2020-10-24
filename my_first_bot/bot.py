@@ -6,37 +6,38 @@ import os
 import asyncio
 
 import discord
-from discord.ext import commands
+from discord.ext.commands import Bot, when_mentioned
+from discord.ext.commands.errors import CheckFailure
 from emoji import EMOJI_ALIAS_UNICODE as EMOJIS
 import dotenv
 
-import cogs
+from cogs import OthersGog, GamesCog
 
 # load environment variables from .env (not commited to git)
 dotenv.load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 CHANNELS_NAMES = os.getenv('CHANNELS_NAMES').split()
 
-class MyFirstBot(commands.Bot):
+class MyFirstBot(Bot):
     def __init__(self, *args, **kwargs):
         # make token a field to be accessible without reloading env
         self.TOKEN = BOT_TOKEN
 
         # bot will respond when mentioned rather to a command prefix
-        command_prefix = commands.when_mentioned
+        command_prefix = when_mentioned
         # instantiate bot core from parent class
         super().__init__(command_prefix, *args, **kwargs)
 
         # register cogs (commands)
-        self.add_cog(cogs.OthersGog(self))
-        self.add_cog(cogs.GamesCog(self))
+        self.add_cog(OthersGog(self))
+        self.add_cog(GamesCog(self))
 
     async def on_ready(self):
         print(f'Logged in as {self.user}')
 
     async def on_command_error(self, ctx, error):
         # if a member doesn't have permission to use a command
-        if isinstance(error, commands.errors.CheckFailure):
+        if isinstance(error, CheckFailure):
             pensive = EMOJIS[':pensive:']
             text = f"Sorry {ctx.message.author.mention}, you don't have permission to use this command {pensive}"
             await ctx.send(text)

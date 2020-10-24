@@ -6,12 +6,12 @@ import random
 from dataclasses import dataclass
 from typing import Tuple
 
-from discord.ext import commands
+from discord.ext.commands import Cog, Bot, command, has_role
 from emoji import EMOJI_ALIAS_UNICODE as EMOJIS
 
 @dataclass
-class OthersGog(commands.Cog):
-    bot: commands.Bot
+class OthersGog(Cog):
+    bot: Bot
     greetings: Tuple[str, ...] = (
         'Hey',
         'Hi',
@@ -33,8 +33,8 @@ class OthersGog(commands.Cog):
         )
     )
 
-    @commands.command(help='Greet the bot!')
-    async def hey(self, ctx):
+    @command(name='hey', help='Greet the bot!')
+    async def greet_user(self, ctx):
         '''
         Returns a random greeting with a random emoji.
         '''
@@ -43,12 +43,12 @@ class OthersGog(commands.Cog):
         text = f'{greeting} {ctx.message.author.mention}! {greet_emoji}'
         await ctx.send(text)
 
-    @commands.command(
+    @command(
         name='heart-me',
         help=f'The bot reacts to your message with {EMOJIS[":heart:"]}')
     # only works if user has 'pro crack' role.
-    @commands.has_role('pro crack')
-    async def heart_me(self, ctx):
+    @has_role('pro crack')
+    async def react_with_heart(self, ctx):
         heart = EMOJIS[':heart:']
         await ctx.message.add_reaction(heart)
 
@@ -58,14 +58,12 @@ class OthersGog(commands.Cog):
         '''
         return id(self)
 
-class GamesCog(commands.Cog):
-    @commands.command(
+class GamesCog(Cog):
+    @command(
+        name='toss',
         help='Play heads or tails, choose your face: type "toss heads" or "toss tails"'
     )
-    async def toss(self, ctx, userface: str):
-        '''
-        Play heads or tails.
-        '''
+    async def play_heads_or_tails(self, ctx, userface: str):
         # heads is True, tails is False
         tossed = random.random() <= 0.5
         did_user_win = tossed == (userface == 'heads')
