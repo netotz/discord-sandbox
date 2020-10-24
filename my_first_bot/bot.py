@@ -10,6 +10,7 @@ from typing import Tuple
 
 import discord
 from discord.ext import commands
+from emoji import EMOJI_ALIAS_UNICODE as EMOJIS
 import dotenv
 
 # bot token is in a .env file, not commited to git
@@ -19,21 +20,52 @@ GUILD_NAME = os.getenv('GUILD_NAME')
 CHANNEL_NAME = os.getenv('CHANNEL_NAME')
 
 @dataclass
-class GreetingsCog(commands.Cog):
+class OthersGog(commands.Cog):
     bot: commands.Bot
-    greetings: Tuple[str, ...] = ('Hey', 'Hello', 'Hola', 'Saludos', 'Saluton')
+    greetings: Tuple[str, ...] = (
+        'Hey',
+        'Hi',
+        'Hello',
+        'Hola',
+        'Saludos',
+        'Saluton',
+    )
+    greet_emojis: Tuple[str, ...] = (
+        ':grinning:',
+        ':smiley:',
+        ':smile:',
+        ':grin:',
+        ':relaxed:',
+        ':blush:',
+        ':wink:',
+        ':yum:',
+    )
 
-    @commands.command()
+    @commands.command(help='Greet the bot!')
     async def hey(self, ctx):
         '''
-        Returns a greeting :)
+        Returns a random greeting with a random emoji.
         '''
         greeting = random.choice(self.greetings)
-        await ctx.send(f'{greeting} {ctx.message.author.name}!')
+        greet_emoji = EMOJIS[random.choice(self.greet_emojis)]
+        await ctx.send(f'{greeting} {ctx.message.author.name}! {greet_emoji}')
+
+    @commands.command(
+        name='heart-me',
+        help=f'The bot reacts your message with {EMOJIS[":heart:"]}')
+    # only works if user has 'pro crack' role.
+    @commands.has_role('pro crack')
+    async def heart_me(self, ctx):
+        await ctx.message.add_reaction(EMOJIS[':heart:'])
+
+    def __hash__(self):
+        return id(self)
 
 class GamesCog(commands.Cog):
-    @commands.command()
-    async def coin(self, ctx, userface: str):
+    @commands.command(
+        help='Play heads or tails, choose your face: type "toss heads" or "toss tails"'
+    )
+    async def toss(self, ctx, userface: str):
         '''
         Play heads or tails.
         '''
@@ -46,7 +78,8 @@ class GamesCog(commands.Cog):
         # save sent message
         message = await ctx.send(f"It's {face}, {phrase}")
 
-        emoji = '\N{WHITE HEAVY CHECK MARK}' if did_user_win else '\N{CROSS MARK}'
+        # emoji = '\N{WHITE HEAVY CHECK MARK}' if did_user_win else '\N{CROSS MARK}'
+        emoji = EMOJIS[':white_check_mark:'] if did_user_win else EMOJIS[':x:']
         try:
             # react with emoji to sent message
             await message.add_reaction(emoji)
@@ -59,11 +92,16 @@ class MyFirstBot(commands.Bot):
         # bot will respond when mentioned rather to a command prefix
         super().__init__(commands.when_mentioned, *args, **kwargs)
         # register cogs (commands)
-        self.add_cog(GreetingsCog(self))
+        self.add_cog(OthersGog(self))
         self.add_cog(GamesCog(self))
 
     async def on_ready(self):
         print(f'Logged in as {self.user}')
+
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.errors.CheckFailure):
+            pensive = EMOJIS[':pensive:']
+            await ctx.send(f"Sorry, you can't use this command {pensive}")
 
     async def count_in_background(self, step=60):
         '''
@@ -79,4 +117,4 @@ class MyFirstBot(commands.Bot):
             await asyncio.sleep(step)
 
             counter += step / 60
-            await channel.send(f'{counter} m')
+            await channel.send(f'{counter} minutes')
