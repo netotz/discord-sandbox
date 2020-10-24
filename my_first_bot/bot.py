@@ -13,7 +13,7 @@ from discord.ext import commands
 from emoji import EMOJI_ALIAS_UNICODE as EMOJIS
 import dotenv
 
-# bot token is in a .env file, not commited to git
+# load environment variables from .env (not commited to git)
 dotenv.load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 GUILD_NAME = os.getenv('GUILD_NAME')
@@ -30,15 +30,17 @@ class OthersGog(commands.Cog):
         'Saludos',
         'Saluton',
     )
-    greet_emojis: Tuple[str, ...] = (
-        ':grinning:',
-        ':smiley:',
-        ':smile:',
-        ':grin:',
-        ':relaxed:',
-        ':blush:',
-        ':wink:',
-        ':yum:',
+    greet_emojis: Tuple[str, ...] = tuple(
+        EMOJIS[alias] for alias in (
+            ':grinning:',
+            ':smiley:',
+            ':smile:',
+            ':grin:',
+            ':relaxed:',
+            ':blush:',
+            ':wink:',
+            ':yum:',
+        )
     )
 
     @commands.command(help='Greet the bot!')
@@ -47,8 +49,8 @@ class OthersGog(commands.Cog):
         Returns a random greeting with a random emoji.
         '''
         greeting = random.choice(self.greetings)
-        greet_emoji = EMOJIS[random.choice(self.greet_emojis)]
-        await ctx.send(f'{greeting} {ctx.message.author.name}! {greet_emoji}')
+        greet_emoji = random.choice(self.greet_emojis)
+        await ctx.send(f'{greeting} {ctx.message.author.mention}! {greet_emoji}')
 
     @commands.command(
         name='heart-me',
@@ -59,6 +61,9 @@ class OthersGog(commands.Cog):
         await ctx.message.add_reaction(EMOJIS[':heart:'])
 
     def __hash__(self):
+        '''
+        Override to allow class to have tuple fields.
+        '''
         return id(self)
 
 class GamesCog(commands.Cog):
@@ -78,7 +83,6 @@ class GamesCog(commands.Cog):
         # save sent message
         message = await ctx.send(f"It's {face}, {phrase}")
 
-        # emoji = '\N{WHITE HEAVY CHECK MARK}' if did_user_win else '\N{CROSS MARK}'
         emoji = EMOJIS[':white_check_mark:'] if did_user_win else EMOJIS[':x:']
         try:
             # react with emoji to sent message
@@ -88,9 +92,14 @@ class GamesCog(commands.Cog):
 
 class MyFirstBot(commands.Bot):
     def __init__(self, *args, **kwargs):
+        # make token a field to be accessible without reloading env
         self.TOKEN = BOT_TOKEN
+
         # bot will respond when mentioned rather to a command prefix
-        super().__init__(commands.when_mentioned, *args, **kwargs)
+        command_prefix = commands.when_mentioned
+        # instantiate bot core from parent class
+        super().__init__(command_prefix, *args, **kwargs)
+
         # register cogs (commands)
         self.add_cog(OthersGog(self))
         self.add_cog(GamesCog(self))
@@ -99,9 +108,10 @@ class MyFirstBot(commands.Bot):
         print(f'Logged in as {self.user}')
 
     async def on_command_error(self, ctx, error):
+        # if a member doesn't have permission to use a command
         if isinstance(error, commands.errors.CheckFailure):
             pensive = EMOJIS[':pensive:']
-            await ctx.send(f"Sorry, you can't use this command {pensive}")
+            await ctx.send(f"Sorry {ctx.message.author.mention}, you don't have permission to use this command {pensive}")
 
     async def count_in_background(self, step=60):
         '''
