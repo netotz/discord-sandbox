@@ -6,7 +6,7 @@ import random
 from dataclasses import dataclass
 from typing import Tuple
 
-from discord.ext.commands import Cog, Bot, command, has_role
+from discord.ext.commands import Cog, Bot, Context, command, has_role, has_permissions
 from emoji import EMOJI_ALIAS_UNICODE as EMOJIS
 
 @dataclass
@@ -34,7 +34,7 @@ class OthersGog(Cog):
     )
 
     @command(name='hey', help='Greet the bot!')
-    async def greet_user(self, ctx):
+    async def greet_user(self, ctx: Context):
         '''
         Returns a random greeting with a random emoji.
         '''
@@ -48,9 +48,14 @@ class OthersGog(Cog):
         help=f'The bot reacts to your message with {EMOJIS[":heart:"]}')
     # only works if user has 'pro crack' role.
     @has_role('pro crack')
-    async def react_with_heart(self, ctx):
+    async def react_with_heart(self, ctx: Context):
         heart = EMOJIS[':heart:']
         await ctx.message.add_reaction(heart)
+
+    @command(name='clear', hidden=True)
+    @has_permissions(administrator=True)
+    async def clear_channel(self, ctx: Context):
+        await ctx.channel.purge()
 
     def __hash__(self):
         '''
@@ -63,7 +68,7 @@ class GamesCog(Cog):
         name='toss',
         help='Play heads or tails, choose your face: type "toss heads" or "toss tails"'
     )
-    async def play_heads_or_tails(self, ctx, userface: str):
+    async def play_heads_or_tails(self, ctx: Context, userface: str):
         # heads is True, tails is False
         tossed = random.random() <= 0.5
         did_user_win = tossed == (userface == 'heads')
