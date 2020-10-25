@@ -12,6 +12,7 @@ from emoji import EMOJI_ALIAS_UNICODE as EMOJIS
 import dotenv
 
 from cogs import OthersGog, GamesCog
+from helpcmd import MyHelpCommand
 
 # load environment variables from .env (not commited to git)
 dotenv.load_dotenv()
@@ -25,8 +26,10 @@ class MyFirstBot(Bot):
 
         # bot will respond when mentioned rather to a command prefix
         command_prefix = when_mentioned
+        help_command = MyHelpCommand()
+        # custom help command
         # instantiate bot core from parent class
-        super().__init__(command_prefix, *args, **kwargs)
+        super().__init__(command_prefix, help_command=help_command, *args, **kwargs)
 
         # register cogs (commands)
         self.add_cog(OthersGog(self))
