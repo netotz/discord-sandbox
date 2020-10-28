@@ -61,6 +61,11 @@ def create_help_paginator(context: Context, n: int):
     return BotEmbedPaginator(context, embeds)
 
 class MyHelpCommand(HelpCommand):
+    def __init__(self, **options):
+        # change default help message for help command
+        attrs = {'help': 'Shows this message, or get help of a specified command.'}
+        super().__init__(command_attrs=attrs, **options)
+
     async def send_bot_help(self, mapping):
         paginator = create_help_paginator(self.context, 6)
         await paginator.run()
