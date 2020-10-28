@@ -40,6 +40,7 @@ class MyFirstBot(Bot):
 
     async def on_command_error(self, ctx, error):
         # if a member doesn't have permission to use a command
+        print(f'\tError: {error}')
         if isinstance(error, CheckFailure):
             pensive = EMOJIS[':pensive:']
             text = f"Sorry {ctx.message.author.mention}, you don't have permission to use this command {pensive}"
