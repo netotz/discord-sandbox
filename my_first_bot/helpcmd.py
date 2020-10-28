@@ -9,27 +9,49 @@ from discord.ext.commands import HelpCommand, Context, Command
 from emoji import EMOJI_ALIAS_UNICODE as EMOJIS
 from disputils import BotEmbedPaginator
 
+def get_command_params(command: Command) -> str:
+    OMIT_PARAMS = ('self', 'ctx', 'context')
+    params = ''.join(
+        f' [{param}]'
+        for param in command.params
+        if param not in OMIT_PARAMS
+    )
+    return command.name + params
+
 def create_help_embed(commands: List[Command]):
     questionmark = EMOJIS[':grey_question:']
     embed = Embed(
-        title=f'{questionmark} Help',
+        title=f'{questionmark} About the bot',
         description="I'm a learning bot. These are my commands:",
         colour=Colour.red(),
         url='https://github.com/netotz/discord-sandbox'
     )
 
     embed.set_thumbnail(url='http://iconbug.com/data/26/256/a2ccff2488d35d8ebc6189ea693cb4a0.png')
-    embed.set_footer(text='Page 1')
 
     for command in commands:
-        omit_params = ('self', 'ctx', 'context')
-        params = ''.join(f' [{param}]' for param in command.params if param not in omit_params)
-        name = command.name + params
         embed.add_field(
-            name=name,
+            name=get_command_params(command),
             value=command.help,
             inline=False
         )
+
+    return embed
+
+def create_command_embed(command: Command):
+    fullcommand = get_command_params(command)
+    docstring = command.callback.__doc__ or ''
+    description = f'{command.help}\n{docstring}'
+    embed = Embed(
+        title=f'`{fullcommand}`',
+        description=description,
+        colour=Colour.default()
+    )
+
+    questionmark = EMOJIS[':grey_question:']
+    embed.set_author(
+        name=f'{questionmark} Command help'
+    )
 
     return embed
 
@@ -40,7 +62,9 @@ def create_help_paginator(context: Context, n: int):
 
 class MyHelpCommand(HelpCommand):
     async def send_bot_help(self, mapping):
-        context: Context = self.context
-
-        paginator = create_help_paginator(context, 2)
+        paginator = create_help_paginator(self.context, 6)
         await paginator.run()
+
+    async def send_command_help(self, command: Command):
+        embed = create_command_embed(command)
+        await self.context.send(embed=embed)
