@@ -2,23 +2,17 @@
 MyFirstBot#9854
 '''
 
-import os
 import asyncio
 
 import discord
-from discord import Message, Activity, ActivityType
+from discord import Activity, ActivityType
 from discord.ext.commands import Bot, Context, when_mentioned_or
 from discord.ext.commands.errors import CheckFailure
 from emoji import EMOJI_ALIAS_UNICODE as EMOJIS
-import dotenv
 
 from cogs import OthersGog, GamesCog
 from helpcmd import MyHelpCommand
-
-# load environment variables from .env (not commited to git)
-dotenv.load_dotenv()
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-CHANNELS_NAMES = os.getenv('CHANNELS_NAMES').split()
+from constants import BOT_TOKEN, CHANNELS_NAMES, COMMAND_PREFIX
 
 class MyFirstBot(Bot):
     def __init__(self, *args, **kwargs):
@@ -26,7 +20,7 @@ class MyFirstBot(Bot):
         self.TOKEN = BOT_TOKEN
 
         # bot will respond when mentioned and to a command prefix
-        command_prefix = when_mentioned_or('.')
+        command_prefix = when_mentioned_or(COMMAND_PREFIX)
         # custom help command
         help_command = MyHelpCommand()
         # instantiate bot from parent class

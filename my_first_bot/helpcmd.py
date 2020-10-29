@@ -9,6 +9,8 @@ from discord.ext.commands import HelpCommand, Context, Command
 from emoji import EMOJI_ALIAS_UNICODE as EMOJIS
 from disputils import BotEmbedPaginator
 
+from constants import COMMAND_PREFIX
+
 def get_command_params(command: Command) -> str:
     OMIT_PARAMS = ('self', 'ctx', 'context')
     params = ''.join(
@@ -16,13 +18,13 @@ def get_command_params(command: Command) -> str:
         for param in command.params
         if param not in OMIT_PARAMS
     )
-    return command.name + params
+    return COMMAND_PREFIX + command.name + params
 
 def create_help_embed(commands: List[Command]):
     questionmark = EMOJIS[':grey_question:']
     embed = Embed(
         title=f'{questionmark} About the bot',
-        description="I'm a learning bot. You can mention me or use prefix `.`\nThese are my commands:",
+        description=f"I'm a learning bot. You can mention me or use prefix `{COMMAND_PREFIX}`\nThese are my commands:",
         colour=Colour.red(),
         url='https://github.com/netotz/discord-sandbox'
     )
