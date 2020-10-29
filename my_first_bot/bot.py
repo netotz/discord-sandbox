@@ -6,7 +6,8 @@ import os
 import asyncio
 
 import discord
-from discord.ext.commands import Bot, when_mentioned
+from discord import Message, Activity, ActivityType
+from discord.ext.commands import Bot, Context, when_mentioned_or
 from discord.ext.commands.errors import CheckFailure
 from emoji import EMOJI_ALIAS_UNICODE as EMOJIS
 import dotenv
@@ -24,11 +25,11 @@ class MyFirstBot(Bot):
         # make token a field to be accessible without reloading env
         self.TOKEN = BOT_TOKEN
 
-        # bot will respond when mentioned rather to a command prefix
-        command_prefix = when_mentioned
-        help_command = MyHelpCommand()
+        # bot will respond when mentioned and to a command prefix
+        command_prefix = when_mentioned_or('.')
         # custom help command
-        # instantiate bot core from parent class
+        help_command = MyHelpCommand()
+        # instantiate bot from parent class
         super().__init__(command_prefix, help_command=help_command, *args, **kwargs)
 
         # register cogs (commands)
@@ -36,15 +37,18 @@ class MyFirstBot(Bot):
         self.add_cog(GamesCog(self))
 
     async def on_ready(self):
+        # listening to
+        activity = Activity(name='mentions or .help', type=ActivityType.listening)
+        await self.change_presence(activity=activity)
         print(f'Logged in as {self.user}')
 
-    async def on_command_error(self, ctx, error):
+    async def on_command_error(self, context: Context, error):
         print(f'\tError: {error}')
         # if a member doesn't have permission to use a command
         if isinstance(error, CheckFailure):
             pensive = EMOJIS[':pensive:']
-            text = f"Sorry {ctx.message.author.mention}, you don't have permission to use this command {pensive}"
-            await ctx.send(text)
+            text = f"Sorry {context.message.author.mention}, you don't have permission to use this command {pensive}"
+            await context.send(text)
 
     async def count_in_background(self, seconds=60):
         '''
