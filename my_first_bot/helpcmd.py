@@ -22,7 +22,7 @@ def create_help_embed(commands: List[Command]):
     questionmark = EMOJIS[':grey_question:']
     embed = Embed(
         title=f'{questionmark} About the bot',
-        description="I'm a learning bot. These are my commands:",
+        description="I'm a learning bot. You can mention me or use prefix `.`\nThese are my commands:",
         colour=Colour.red(),
         url='https://github.com/netotz/discord-sandbox'
     )
